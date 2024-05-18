@@ -1,9 +1,22 @@
-
 [project]
 name = "clarity-smart-contracts"
+telemetry = false
+cache_dir = './.cache'
+requirements = []
 
-[contracts.history]
+[contracts.composable-fungible-token]
 path = "contracts/composable-fungible-token.clar"
+clarity_version = 2
+epoch = 2.5
 depends_on = []
+
+[repl.analysis]
+passes = ['check_checker']
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
 
 [notebooks]

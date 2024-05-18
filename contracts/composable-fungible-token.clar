@@ -25,7 +25,7 @@
 (define-map allowances {spender: principal, owner: principal} uint)
 
 ;; Total Supply
-(define-data-var total-supply uint u21000000000)
+(define-data-var total-supply uint u0)
 
 ;; Decimals
 (define-data-var decimals int 8)
@@ -125,5 +125,5 @@
 ;; Initialize ;;
 
 (begin
-  (unwrap! (mint u200 'ST398K1WZTBVY6FE2YEHM6HP20VSNVSSPJTW0D53M) (err false))
-  (mint u100 'ST1JDEC841ZDWN9CKXKJMDQGP5TW1AM10B7EV0DV9))
+  (unwrap! (mint u200 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM) (err false))
+  (mint u100 'ST1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2ZQ8YPD5))

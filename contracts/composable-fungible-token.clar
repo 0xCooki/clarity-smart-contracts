@@ -28,7 +28,7 @@
 (define-data-var total-supply uint u0)
 
 ;; Decimals
-(define-data-var decimals int 8)
+(define-data-var decimals int 18)
 
 ;; Name
 (define-data-var name (string-ascii 32) "MyToken")
@@ -55,8 +55,7 @@
 ;; Decrease allowance of a specified spender.
 (define-private (decrease-allowance (amount uint) (spender principal) (owner principal))
   (let ((allowance-val (allowance spender owner)))
-    (if (or (> amount allowance-val) (<= amount u0))
-      true
+    (if (or (> amount allowance-val) (<= amount u0)) true
       (begin
         (map-set allowances { spender: spender, owner: owner } (- allowance-val amount))
         true))))
@@ -64,53 +63,58 @@
 ;; Increase allowance of a specified spender.
 (define-private (increase-allowance (amount uint) (spender principal) (owner principal))
   (let ((allowance-val (allowance spender owner)))
-    (if (<= amount u0)
-      false
+    (if (<= amount u0) false
       (begin
         (map-set allowances { spender: spender, owner: owner } (+ allowance-val amount))
         true))))
 
-;; Public functions ;;
-
-;; Transfers tokens to a specified principal.
-(define-public (transfer-token (amount uint) (recipient principal) )
-  (transfer amount tx-sender recipient))
-
-;; Transfers tokens to a specified principal, performed by a spender
-(define-public (transfer-from (amount uint) (owner principal) (recipient principal) )
-  (let ((allowance-val (allowance tx-sender owner)))
-    (begin
-      (if (or (> amount allowance-val) (<= amount u0))
-        (err false)
-        (if (and
-            (unwrap! (transfer amount owner recipient) (err false))
-            (decrease-allowance amount tx-sender owner))
-        (ok true)
-        (err false))))))
-
-;; Update the allowance for a given spender
-(define-public (approve (amount uint) (spender principal) )
-  (if (and (> amount u0)
-           (print (increase-allowance amount spender tx-sender )))
-      (ok amount)
-      (err false)))
-
-;; Revoke a given spender
-(define-public (revoke (spender principal))
-  (let ((allowance-val (allowance spender tx-sender)))
-    (if (and (> allowance-val u0)
-             (decrease-allowance allowance-val spender tx-sender))
-        (ok 0)
-        (err false))))
-
 ;; Mint new tokens.
 (define-private (mint (amount uint) (account principal))
-  (if (<= amount u0)
-      (err false)
+  (if (<= amount u0) (err false)
       (begin
         (var-set total-supply (+ (var-get total-supply) amount))
         (unwrap! (ft-mint? fungible-token amount account) (err false))
         (ok amount))))
+
+;; Public functions ;;
+
+;; Transfers tokens to a specified principal.
+;; #[allow(unchecked_data)]
+(define-public (transfer-token (amount uint) (recipient principal))
+  (begin 
+    (asserts! (> amount u0) (err false))
+    (transfer amount tx-sender recipient)))
+
+;; Transfers tokens to a specified principal, performed by a spender
+;; #[allow(unchecked_data)]
+(define-public (transfer-from (amount uint) (owner principal) (recipient principal) )
+  (let ((allowance-val (allowance tx-sender owner)))
+    (begin
+      (if (or (> amount allowance-val) (<= amount u0)) (err false)
+        (if (and
+              (unwrap! (transfer amount owner recipient) (err false))
+              (decrease-allowance amount tx-sender owner))
+            (ok true)
+            (err false))))))
+
+;; Update the allowance for a given spender
+;; #[allow(unchecked_data)]
+(define-public (approve (amount uint) (spender principal) )
+  (if (and 
+        (> amount u0)
+        (print (increase-allowance amount spender tx-sender )))
+      (ok amount)
+      (err false)))
+
+;; Revoke a given spender
+;; #[allow(unchecked_data)]
+(define-public (revoke (spender principal))
+  (let ((allowance-val (allowance spender tx-sender)))
+    (if (and 
+          (> allowance-val u0)
+          (print (decrease-allowance allowance-val spender tx-sender)))
+        (ok u0)
+        (err false))))
 
 ;; Read Only ;;
 
@@ -122,8 +126,20 @@
 (define-read-only (get-total-supply)
   (var-get total-supply))
 
+;; Retrieve the name of the token
+(define-read-only (get-name) 
+  (var-get name))
+
+;; Retrieve the symbol of the token
+(define-read-only (get-symbol) 
+  (var-get symbol))
+
+;; Retrieve the token-uri of the symbol
+(define-read-only (get-uri) 
+  (var-get token-uri))
+
 ;; Initialize ;;
 
 (begin
-  (unwrap! (mint u200 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM) (err false))
-  (mint u100 'ST1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2ZQ8YPD5))
+  (unwrap! (mint u2000000000000000000 'ST1SJ3DTE5DN7X54YDH5D64R3BCB6A2AG2ZQ8YPD5) (err false))
+  (mint u1000000000000000000 'ST2CY5V39NHDPWSXMW9QDT3HC3GD6Q6XX4CFRK9AG))
